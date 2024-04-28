@@ -7,6 +7,10 @@
 #include <string.h>
 #include <time.h>
 #include <stdbool.h>
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <fstream>
 
 typedef struct card_s {
 
@@ -27,8 +31,7 @@ int dealCount = 1;
 //all the functions used
 void printCard(card* number);
 void printDiscard(card deck[]);
-void readDeck(card arr[]);
-void createOwnDeck(card arr[]);
+bool readDeck(std::string fileName, card arr[]);
 void swapCards(card deck[], int i, int j);
 void shuffleDeck(card deck[]);
 void dealCards(card** head, card** tail, card deck[], int i);
@@ -96,67 +99,86 @@ int main(void) {
 		p1CanPlay = true;
 		p2CanPlay = true;
 
+		bool isValidFile = false;
+
 		//start the game
 		printf("LET'S PLAY A GAME OF UNO!\n\n");
 
-		//ask user what they want to do before the start of the game
-		printf("PRESS [1] TO SHUFFLE THE UNO DECK OR [2] TO LOAD A DECK FROM A FILE: "); //shuffle vs load deck
-		scanf(" %d", &shuffleChoice);
+		while (!isValidFile) {
+			//ask user what they want to do before the start of the game
+			printf("PRESS [1] TO SHUFFLE THE UNO DECK OR [2] TO LOAD A DECK FROM A FILE: "); //shuffle vs load deck
 
-		//if they don't select the numbers asked
-		while (shuffleChoice != 1 && shuffleChoice != 2) {
-			printf("PLEASE SELECT [1] OR [2]. ");
-			scanf(" %d", &shuffleChoice);
-		}
+			//if they don't select the numbers asked
+			while ((shuffleChoice != 1) && (shuffleChoice != 2)) {
+				std::string input;
+				std::getline(std::cin, input); // Read the entire line
 
-		//if the selected choice is 1
-		if (shuffleChoice == 1) {
-			readDeck(deck);
-			swapCards(deck, 0, 107);
-			shuffleDeck(deck);
-			printf("\nTHE DECK IS SHUFFLED.\n");
+				std::stringstream ss(input);
 
-			//alternating between the two players when dealing cards
-			for (i = 0; i < 14; i++) {
-
-				dealCards(&pH1, &pT1, deck, i);
-				++dealCount;
-
-				i++;
-
-				dealCards(&pH2, &pT2, deck, i);
-				++dealCount;
-
-			}
-
-			//initial deal of the cards to the two players
-			while (temp1 != NULL) {
-
-				if (dealCount % 2 != 0) {
-					temp1 = temp1->next;
+				if (ss >> shuffleChoice) {
+					// Check if there's extra data after the integer (potential overflow)
+					std::string remaining;
+					if (std::getline(ss, remaining)) {
+						shuffleChoice = -1;
+					} else {
+						printf("PLEASE SELECT [1] OR [2]. ");
+					}
 				}
-
 				else {
-					temp2 = temp2->next;
+					printf("PLEASE SELECT [1] OR [2]. ");
 				}
-				++dealCount;
-
 			}
-			temp1 = pH1;
-			temp2 = pH2;
+
+			//if the selected choice is 1
+			if (shuffleChoice == 1) {
+				strcpy(loadedFile, "deck.txt");
+			} else if (shuffleChoice == 2) { //if the selected choice is 2
+				printf("\nPLEASE ENTER THE NAME OF FILE(load.txt): "); //add your deck to the load.txt file beforehand, it is empty for you to use
+				scanf(" %s", &loadedFile);
+			}
+
+			isValidFile = readDeck(loadedFile, deck);
+
+			if (!isValidFile) {
+				printf("FILE CANNOT BE FOUND.\n");
+				shuffleChoice = -1;
+			} else {
+				break;
+			}
 		}
 
-		//if the selected choice is 2
-		else if (shuffleChoice == 2) {
+		//alternating between the two players when dealing cards
+		for (i = 0; i < 14; i++) {
 
-			printf("\nPLEASE ENTER THE NAME OF FILE(load.txt): "); //add your deck to the load.txt file beforehand, it is empty for you to use
-			scanf(" %s", &loadedFile);
+			dealCards(&pH1, &pT1, deck, i);
+			++dealCount;
 
-			createOwnDeck(deck);
-			swapCards(deck, 0, 107);
-			shuffleDeck(deck);
-			printf("\nTHE DECK IS SHUFFLED.\n");
+			i++;
+
+			dealCards(&pH2, &pT2, deck, i);
+			++dealCount;
+
 		}
+
+		//initial deal of the cards to the two players
+		while (temp1 != NULL) {
+
+			if (dealCount % 2 != 0) {
+				temp1 = temp1->next;
+			}
+
+			else {
+				temp2 = temp2->next;
+			}
+			++dealCount;
+
+		}
+		temp1 = pH1;
+		temp2 = pH2;
+
+		swapCards(deck, 0, 107);
+		shuffleDeck(deck);
+		printf("\nTHE DECK IS SHUFFLED.\n");
 
 		//where game is played, as long as neither player has 0 cards continue to loop game
 		while (p1Count > 0 && p2Count > 0) {
@@ -358,57 +380,48 @@ void printDiscard(card deck[]) {
 	}
 }
 
-//read the deck of 108 cards, predetermined deck for selection 1
-void readDeck(card arr[]) {
+//read the deck of 108 cards
+bool readDeck(std::string fileName, card arr[]) {
+    std::string tempInput;
+	
+	// Open the file in read mode
+    std::ifstream infile(fileName);
+    if (!infile.is_open()) {
+        std::cerr << "Error: Could not open file '" << fileName << "'" << std::endl;
+        return false;
+    }
 
-	FILE* unoDeck;
-	unoDeck = fopen("deck.txt", "r");
+    // Loop to read data from the file
+    for (int i = 0; i < 108; ++i) {
+        // Read integer value
+        if (!(infile >> arr[i].value)) {
+            std::cerr << "Error: Failed to read integer value at line " << i + 1 << std::endl;
+            return false;
+        }
 
-	int i;
+        // Skip whitespace (using get() or discard whitespace in the loop condition)
+        infile.get(); // Discard one character (optional)
 
-	if (unoDeck == NULL) {
-		printf("FILE CANNOT BE FOUND.\n");
-	}
+        // Read color string (assuming limited size)
+        if (!std::getline(infile, tempInput, ' ')) {
+            strcpy(arr[i].color, tempInput.c_str());
+			
+			std::cerr << "Error: Failed to read color at line " << i + 1 << std::endl;
+            return false;
+        }
 
-	//read the file containing the deck
-	else {
-		for (i = 0; i < 108; ++i) {
-			fscanf(unoDeck, "%d", &arr[i].value);
-			//printf("%d", arr[i].value);
-			fscanf(unoDeck, "%*c");
-			fscanf(unoDeck, "%s", arr[i].color);
-			//printf("%s", arr[i].color);
-			fscanf(unoDeck, "%*c");
-			fscanf(unoDeck, "%s", arr[i].action);
-			//printf("%s", arr[i].action);
-		}
-	}
-}
+        // Read action string
+        if (!std::getline(infile, tempInput)) {
+            strcpy(arr[i].color, tempInput.c_str());
+			std::cerr << "Error: Failed to read action at line " << i + 1 << std::endl;
+            return false;
+        }
+    }
 
-//read the deck of 108 crads, user inputed deck for selection 2
-void createOwnDeck(card arr[]) {
+    // Close the file
+    infile.close();
 
-	FILE* userFile; //name file
-	userFile = fopen("load.txt", "r"); //open text in file
-
-	int i;
-
-	if (userFile == NULL) { //incase the file can't be found 
-		printf("FILE CANNOT BE FOUND.\n");
-	}
-
-	else {
-		for (i = 0; i < 108; ++i) {
-			fscanf(userFile, "%d", &arr[i].value);
-			//printf("%d", arr[i].value);
-			fscanf(userFile, "%*c");
-			fscanf(userFile, "%s", arr[i].color);
-			//printf("%s", arr[i].color);
-			fscanf(userFile, "%*c");
-			fscanf(userFile, "%s", arr[i].action);
-			//printf("%s", arr[i].action);
-		}
-	}
+    return true;
 }
 
 //swap the cards for the shuffle function
