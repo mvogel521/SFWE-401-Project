@@ -200,36 +200,45 @@ int main(void) {
 				printDiscard(deck);
 
 
-				printf("\nSELECT [1]-[%d] TO PLAY A CARD OR SELECT [0] TO DRAW A CARD FROM THE DECK: ", p1Count);
-				scanf(" %d", &turnChoice);
-
-				if (turnChoice >= 1 && turnChoice <= p1Count) {
-
-					checkResult = checkCard(&temp1, &pT2, turnChoice, deck, 1);
-
-					if (checkResult == true) {
-
-						discardPile(deck, &temp1, turnChoice);
-						removeCard(&temp1, turnChoice);
+				std::string tempInput;
+				while (true) {
+					printf("\nSELECT [1]-[%d] TO PLAY A CARD OR SELECT [0] TO DRAW A CARD FROM THE DECK: ", p2Count);
+					std::getline(std::cin, tempInput);
+					std::istringstream iss(tempInput);
+					if (!(iss >> turnChoice) || iss.peek() != std::char_traits<char>::eof()) {
+						printf("INVALID INPUT.\n");
+					} else if ((turnChoice < 0) || (turnChoice > p2Count)) {
+						printf("INVALID INPUT.\n");
 					}
-
-					//discardPile(deck, &temp1, turnChoice);
-					//removeCard(&temp1, turnChoice);
-
-					printf("\nPLAYER 1 HAND: ");
-					printCard(temp1);
-					printf("\n");
-
-					--p1Count;
-
-					if (p1Count == 1) {
-						printf("\nPLAYER 1 HAS UNO");
+					else {
+						break;
 					}
+				}
 
-					if (p1Count == 0) {
-						//p1 won the game, so set p2CanPlay to false
-						p2CanPlay = false;
-					}
+				checkResult = checkCard(&temp1, &pT2, turnChoice, deck, 1);
+
+				if (checkResult == true) {
+
+					discardPile(deck, &temp1, turnChoice);
+					removeCard(&temp1, turnChoice);
+				}
+
+				//discardPile(deck, &temp1, turnChoice);
+				//removeCard(&temp1, turnChoice);
+
+				printf("\nPLAYER 1 HAND: ");
+				printCard(temp1);
+				printf("\n");
+
+				--p1Count;
+
+				if (p1Count == 1) {
+					printf("\nPLAYER 1 HAS UNO");
+				}
+
+				if (p1Count == 0) {
+					//p1 won the game, so set p2CanPlay to false
+					p2CanPlay = false;
 				}
 
 				//runs if player wants to draw a card from the deck rather than play a card
@@ -268,7 +277,6 @@ int main(void) {
 				printf("\n");
 
 				std::string tempInput;
-				std::getline(std::cin, tempInput);
 				while (true) {
 					printf("\nSELECT [1]-[%d] TO PLAY A CARD OR SELECT [0] TO DRAW A CARD FROM THE DECK: ", p2Count);
 					std::getline(std::cin, tempInput);
@@ -283,33 +291,30 @@ int main(void) {
 					}
 				}
 
-				if (turnChoice >= 1 && turnChoice <= p2Count) {
+				checkResult = checkCard(&temp2, &pT1, turnChoice, deck, 2);
 
-					checkResult = checkCard(&temp2, &pT1, turnChoice, deck, 2);
+				if (checkResult == true) {
 
-					if (checkResult == true) {
+					discardPile(deck, &temp2, turnChoice);
+					removeCard(&temp2, turnChoice);
+				}
 
-						discardPile(deck, &temp2, turnChoice);
-						removeCard(&temp2, turnChoice);
-					}
+				//discardPile(deck, &temp2, turnChoice);
+				//removeCard(&temp2, turnChoice);
+				--p2Count;
 
-					//discardPile(deck, &temp2, turnChoice);
-					//removeCard(&temp2, turnChoice);
-					--p2Count;
+				printf("\nPLAYER 2 HAND:\n");
+				printCard(temp2);
+				printf("\n");
 
-					printf("\nPLAYER 2 HAND:\n");
-					printCard(temp2);
-					printf("\n");
+				//check if the player has uno
+				if (p2Count == 1) {
+					printf("\nPLAYER 2 HAS UNO");
+				}
 
-					//check if the player has uno
-					if (p2Count == 1) {
-						printf("\nPLAYER 2 HAS UNO");
-					}
-
-					if (p2Count == 0) {
-						//p2 won the game, so set p1CanPlay to false
-						p1CanPlay = false;
-					}
+				if (p2Count == 0) {
+					//p2 won the game, so set p1CanPlay to false
+					p1CanPlay = false;
 				}
 
 				//runs if player wants to draw a card from the deck rather than play a card
