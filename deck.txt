@@ -1,4 +1,3 @@
-0 Red number
 0 Yellow number
 0 Green number
 0 Blue number

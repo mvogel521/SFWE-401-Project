@@ -119,13 +119,13 @@ int main(void) {
 					// Check if there's extra data after the integer (potential overflow)
 					std::string remaining;
 					if (std::getline(ss, remaining)) {
-						shuffleChoice = -1;
-					} else {
 						printf("PLEASE SELECT [1] OR [2]. ");
+						shuffleChoice = -1;
 					}
 				}
 				else {
 					printf("PLEASE SELECT [1] OR [2]. ");
+					shuffleChoice = -1;
 				}
 			}
 
@@ -140,7 +140,7 @@ int main(void) {
 			isValidFile = readDeck(loadedFile, deck);
 
 			if (!isValidFile) {
-				printf("FILE CANNOT BE FOUND.\n");
+				printf("INVALID FILE.\n");
 				shuffleChoice = -1;
 			} else {
 				break;
@@ -383,6 +383,7 @@ void printDiscard(card deck[]) {
 //read the deck of 108 cards
 bool readDeck(std::string fileName, card arr[]) {
     std::string tempInput;
+	int i = 0;
 	
 	// Open the file in read mode
     std::ifstream infile(fileName);
@@ -392,31 +393,29 @@ bool readDeck(std::string fileName, card arr[]) {
     }
 
     // Loop to read data from the file
-    for (int i = 0; i < 108; ++i) {
-        // Read integer value
-        if (!(infile >> arr[i].value)) {
-            std::cerr << "Error: Failed to read integer value at line " << i + 1 << std::endl;
-            return false;
-        }
-
-        // Skip whitespace (using get() or discard whitespace in the loop condition)
-        infile.get(); // Discard one character (optional)
-
-        // Read color string (assuming limited size)
-        if (!std::getline(infile, tempInput, ' ')) {
-            strcpy(arr[i].color, tempInput.c_str());
-			
-			std::cerr << "Error: Failed to read color at line " << i + 1 << std::endl;
-            return false;
-        }
-
-        // Read action string
-        if (!std::getline(infile, tempInput)) {
-            strcpy(arr[i].color, tempInput.c_str());
-			std::cerr << "Error: Failed to read action at line " << i + 1 << std::endl;
-            return false;
-        }
-    }
+    while (std::getline(infile, tempInput)) {
+		std::istringstream iss(tempInput);
+		if (!(iss >> arr[i].value)) {
+			return false;
+		} else if ((arr[i].value < -4) || (arr[i].value > 9)) {
+			return false;
+		}
+		if (!(iss >> arr[i].color)) {
+			return false;
+		} else if ((strcmp(arr[i].color, "Red") != 0) && (strcmp(arr[i].color, "Yellow") != 0) && (strcmp(arr[i].color, "Green") != 0) && (strcmp(arr[i].color, "Blue") != 0) && (strcmp(arr[i].color, "Black") != 0)) {
+			return false;
+		}
+		if (!(iss >> arr[i].action)) {
+			return false;
+		} else if ((strcmp(arr[i].action, "number") != 0) && (strcmp(arr[i].action, "Skip") != 0) && (strcmp(arr[i].action, "Reverse") != 0) && (strcmp(arr[i].action, "PlusTwo") != 0) && (strcmp(arr[i].action, "Wild") != 0) && (strcmp(arr[i].action, "PlusFourWild") != 0)) {
+			return false;
+		}
+		
+		i++;
+		if (i >= 108) {
+			break;
+		}
+	}
 
     // Close the file
     infile.close();
