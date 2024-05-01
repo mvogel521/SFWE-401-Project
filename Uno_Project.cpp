@@ -267,8 +267,21 @@ int main(void) {
 				printCard(temp2);
 				printf("\n");
 
-				printf("\nSELECT [1]-[%d] TO PLAY A CARD OR SELECT [0] TO DRAW A CARD FROM THE DECK: ", p2Count);
-				scanf(" %d", &turnChoice);
+				std::string tempInput;
+				std::getline(std::cin, tempInput);
+				while (true) {
+					printf("\nSELECT [1]-[%d] TO PLAY A CARD OR SELECT [0] TO DRAW A CARD FROM THE DECK: ", p2Count);
+					std::getline(std::cin, tempInput);
+					std::istringstream iss(tempInput);
+					if (!(iss >> turnChoice) || iss.peek() != std::char_traits<char>::eof()) {
+						printf("INVALID INPUT.\n");
+					} else if ((turnChoice < 0) || (turnChoice > p2Count)) {
+						printf("INVALID INPUT.\n");
+					}
+					else {
+						break;
+					}
+				}
 
 				if (turnChoice >= 1 && turnChoice <= p2Count) {
 
